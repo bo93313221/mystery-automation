@@ -83,8 +83,8 @@ def parse_reddit(src, top_n=5):
         return []
     results = []
     for p in posts:
-        title = p["data"].get("title","").strip()
-        link  = p["data"].get("url","")
+        title = p["data"].get("title", "").strip()
+        link  = p["data"].get("url", "")
         if is_duplicate(title) or not is_valid_url(link):
             continue
         results.append((title, link, "reddit"))
@@ -116,7 +116,7 @@ def parse_html(src, top_n=5):
     results = []
     for el in elems:
         title = el.get_text(strip=True)
-        link  = el.get("href","")
+        link  = el.get("href", "")
         if is_duplicate(title) or not is_valid_url(link):
             continue
         results.append((title, link, "html"))
@@ -144,7 +144,7 @@ def scrape_and_save(day):
         except Exception as e:
             logging.error(f"시트 저장 에러: {e}")
 
- # ─── 7) 스케줄러 등록 & 실행부 ────────────────────
+# 7) 스케줄러 등록 & 실행부
  def job():
      wd = time.localtime().tm_wday
      mapping = {0:"월요일",1:"화요일",2:"수요일",3:"목요일",4:"금요일"}
