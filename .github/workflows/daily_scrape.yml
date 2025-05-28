@@ -1,9 +1,9 @@
 name: Daily Scrape
 
 on:
-  workflow_dispatch:
+  workflow_dispatch:               # 수동 실행 지원
   schedule:
-    - cron: '0 0 * * 1-5'  # 월~금 09:00 KST (00:00 UTC)
+    - cron: '0 0 * * 1-5'          # 매주 월~금 09:00 KST (00:00 UTC)
 
 jobs:
   scrape:
@@ -11,12 +11,19 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
         with:
           python-version: '3.8'
-      - run: |
+
+      - name: Install dependencies
+        run: |
           pip install requests beautifulsoup4 feedparser gspread oauth2client schedule playwright
           playwright install
-      - run: python full_mystery_automation.py
+
+      - name: Run automation script
         env:
           SHEET_URL: ${{ secrets.SHEET_URL }}
+          GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS }}
+        run: python full_mystery_automation.py
