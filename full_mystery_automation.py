@@ -19,7 +19,7 @@ logging.basicConfig(
 # 2) 구글 시트 인증 정보
 SCOPE      = ["https://spreadsheets.google.com/feeds","https://www.googleapis.com/auth/drive"]
 CREDS_FILE = "credentials.json"
-SHEET_URL  = "여기에_구글_시트_URL_붙여넣기"
+SHEET_URL  = "https://docs.google.com/spreadsheets/d/1jRIGFqmCGIWsMmE6XDnjuEnuMJ4e0pwYqa65JEae9Pg/edit?gid=0#gid=0"
 
 creds = ServiceAccountCredentials.from_json_keyfile_name(CREDS_FILE, SCOPE)
 gc    = gspread.authorize(creds)
