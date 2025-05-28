@@ -24,11 +24,14 @@ SCOPE = [
     "https://www.googleapis.com/auth/drive"
 ]
 # GitHub Actions or PythonAnywhere 환경 변수에 JSON 전체를 등록한 경우
-creds_dict = json.loads(os.environ["GOOGLE_CREDENTIALS"])
+creds_dict = json.loads(os.environ.get("GOOGLE_CREDENTIALS", "{}"))
 creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, SCOPE)
 
 # 시트 URL도 환경변수로 관리하거나, 아래 기본값을 실제 시트 URL로 바꿔주세요
-SHEET_URL = os.environ.get("SHEET_URL", "https://docs.google.com/spreadsheets/d/1jRIGFqmCGIWsMmE6XDnjuEnuMJ4e0pwYqa65JEae9Pg/edit?gid=0#gid=0")
+SHEET_URL = os.environ.get(
+    "SHEET_URL",
+    "https://docs.google.com/spreadsheets/d/1jRIGFqmCGIWsMmE6XDnjuEnuMJ4e0pwYqa65JEae9Pg/edit?gid=0#gid=0"
+)
 
 gc = gspread.authorize(creds)
 sheet = gc.open_by_url(SHEET_URL).sheet1
@@ -145,26 +148,24 @@ def scrape_and_save(day):
             logging.error(f"시트 저장 에러: {e}")
 
 # 7) 스케줄러 등록 & 실행부
- def job():
-     wd = time.localtime().tm_wday
-     mapping = {0:"월요일",1:"화요일",2:"수요일",3:"목요일",4:"금요일"}
-     if wd in mapping:
-         scrape_and_save(mapping[wd])
+-def job():
++def job():
+    wd = time.localtime().tm_wday
+    mapping = {0:"월요일",1:"화요일",2:"수요일",3:"목요일",4:"금요일"}
+    if wd in mapping:
+        scrape_and_save(mapping[wd])
 
- schedule.every().day.at("09:00").do(job)
+-schedule.every().day.at("09:00").do(job)
++schedule.every().day.at("09:00").do(job)
 
 -if __name__ == "__main__":
--    logging.info("스케줄러 시작")
--    while True:
--        schedule.run_pending()
--        time.sleep(30)
 +if __name__ == "__main__":
-+    logging.info("스케줄러 시작")
-+    # GitHub Actions 환경에서는 한 번만 실행 후 종료
-+    if os.getenv("GITHUB_ACTIONS"):
-+        job()
-+    else:
-+        # 로컬·PythonAnywhere 환경에서는 계속 돌림
-+        while True:
-+            schedule.run_pending()
-+            time.sleep(30)
+    logging.info("스케줄러 시작")
+    # GitHub Actions 환경에서는 한 번만 실행 후 종료
+    if os.getenv("GITHUB_ACTIONS"):
+        job()
+    else:
+        # 로컬·PythonAnywhere 환경에서는 계속 돌림
+        while True:
+            schedule.run_pending()
+            time.sleep(30)
