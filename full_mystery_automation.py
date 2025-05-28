@@ -144,17 +144,27 @@ def scrape_and_save(day):
         except Exception as e:
             logging.error(f"시트 저장 에러: {e}")
 
-# 7) 스케줄러 등록
-def job():
-    wd = time.localtime().tm_wday
-    mapping = {0:"월요일",1:"화요일",2:"수요일",3:"목요일",4:"금요일"}
-    if wd in mapping:
-        scrape_and_save(mapping[wd])
+ # ─── 7) 스케줄러 등록 & 실행부 ────────────────────
+ def job():
+     wd = time.localtime().tm_wday
+     mapping = {0:"월요일",1:"화요일",2:"수요일",3:"목요일",4:"금요일"}
+     if wd in mapping:
+         scrape_and_save(mapping[wd])
 
-schedule.every().day.at("09:00").do(job)
+ schedule.every().day.at("09:00").do(job)
 
-if __name__ == "__main__":
-    logging.info("스케줄러 시작")
-    while True:
-        schedule.run_pending()
-        time.sleep(30)
+-if __name__ == "__main__":
+-    logging.info("스케줄러 시작")
+-    while True:
+-        schedule.run_pending()
+-        time.sleep(30)
++if __name__ == "__main__":
++    logging.info("스케줄러 시작")
++    # GitHub Actions 환경에서는 한 번만 실행 후 종료
++    if os.getenv("GITHUB_ACTIONS"):
++        job()
++    else:
++        # 로컬·PythonAnywhere 환경에서는 계속 돌림
++        while True:
++            schedule.run_pending()
++            time.sleep(30)
