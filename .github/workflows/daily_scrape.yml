@@ -1,0 +1,27 @@
+name: Daily Scrape
+
+on:
+  schedule:
+    - cron: '0 0 0 * * 1-5'  # 매주 월~금 09:00 KST (00:00 UTC)
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.8'
+
+      - name: Install dependencies
+        run: |
+          pip install requests beautifulsoup4 feedparser gspread oauth2client schedule playwright
+          playwright install
+
+      - name: Run automation script
+        env:
+          SHEET_URL: ${{ secrets.SHEET_URL }}
+        run: python full_mystery_automation.py
