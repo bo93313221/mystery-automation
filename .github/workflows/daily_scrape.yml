@@ -2,7 +2,7 @@ name: Daily Scrape
 
 on:
   schedule:
-    - cron: '0 0 0 * * 1-5'  # 월~금 09:00 KST (00:00 UTC)
+    - cron: '0 0 * * 1-5'  # 월~금 09:00 KST (00:00 UTC)
 
 jobs:
   scrape:
