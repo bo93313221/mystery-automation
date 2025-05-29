@@ -26,6 +26,7 @@ SCOPES = [
 KEYFILE_PATH = os.path.expanduser('~/credentials.json')
 
 creds = ServiceAccountCredentials.from_json_keyfile_name(KEYFILE_PATH, SCOPES)
+
 gc = gspread.authorize(creds)
 
 # 시트 URL (환경변수 또는 아래 기본값 사용)
@@ -45,11 +46,11 @@ def is_valid_url(url):
     except:
         return False
 
- def ensure_header():
+def ensure_header():
     if not sheet.row_values(1):
         sheet.append_row(['제목', '출처 링크', '요일', '출처'])
 
-# 4) 요일별 스크래핑 소스
+# 4) 요일별 스크래핑 소스 (목요일은 RSS로 변경)
 DAY_SOURCES = {
     '월요일': [
         {'type': 'reddit', 'url': 'https://www.reddit.com/r/UnresolvedMysteries/top.json?t=week'},
