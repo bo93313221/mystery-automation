@@ -23,7 +23,7 @@ jobs:
 
       - name: Write credentials file
         run: |
-          echo "${{ secrets.GOOGLE_CREDENTIALS }}" > credentials.json
+          echo "${{ secrets.GOOGLE_CREDENTIALS }}" > $HOME/credentials.json
 
       - name: Run automation script
         env:
