@@ -45,7 +45,7 @@ def is_valid_url(url):
     except:
         return False
 
-def ensure_header():
+ def ensure_header():
     if not sheet.row_values(1):
         sheet.append_row(['제목', '출처 링크', '요일', '출처'])
 
@@ -64,8 +64,7 @@ DAY_SOURCES = {
         {'type': 'reddit', 'url': 'https://www.reddit.com/r/Archaeology/top.json?t=week'}
     ],
     '목요일': [
-        {'type': 'reddit', 'url': 'https://www.reddit.com/r/Conspiracy/top.json?t=week'},
-        {'type': 'html',   'url': 'https://www.cia.gov/readingroom/collection/mk-ultra', 'selector': '.item-title a'}
+        {'type': 'rss',    'url': 'https://www.cia.gov/feeds/mk-ultra.rss'}
     ],
     '금요일': [
         {'type': 'reddit', 'url': 'https://www.reddit.com/r/Glitch_in_the_Matrix/top.json?t=week'},
@@ -75,22 +74,28 @@ DAY_SOURCES = {
 
 # 5) 파싱 함수들
 def parse_reddit(src, top_n=5):
-    headers = {'User-Agent': 'Mozilla/5.0'}
+    headers = {
+        'User-Agent': 'MysteryBot/1.0 (by /u/PoemRevolutionary984)',
+        'Accept-Encoding': 'gzip'
+    }
     try:
         r = requests.get(src['url'], headers=headers, timeout=10)
         r.raise_for_status()
         posts = r.json().get('data', {}).get('children', [])[:top_n]
+        items = [(p['data']['title'], p['data']['url'], 'reddit') for p in posts]
     except Exception as e:
-        logging.error(f"Reddit 요청 실패 ({src['url']}): {e}")
-        return []
+        logging.warning(f"Reddit 차단 또는 오류({src['url']}): {e} → Pushshift 대체")
+        subreddit = src['url'].split("/r/")[1].split("/")[0]
+        ps_url = f"https://api.pushshift.io/reddit/search/submission/?subreddit={subreddit}&size={top_n}&sort=desc"
+        r = requests.get(ps_url, headers=headers, timeout=10)
+        data = r.json().get('data', [])[:top_n]
+        items = [(e.get('title',''), e.get('full_link') or e.get('url',''), 'reddit') for e in data]
 
     results = []
-    for p in posts:
-        title = p['data'].get('title', '').strip()
-        link = p['data'].get('url', '')
-        if is_duplicate(title) or not is_valid_url(link):
+    for title, link, stype in items:
+        if not title or is_duplicate(title) or not is_valid_url(link):
             continue
-        results.append((title, link, 'reddit'))
+        results.append((title, link, stype))
     return results
 
 def parse_rss(src, top_n=5):
@@ -121,13 +126,13 @@ def parse_html(src, top_n=5):
     results = []
     for el in elems:
         title = el.get_text(strip=True)
-        link = el.get('href', '')
+        link = el.get('href','')
         if is_duplicate(title) or not is_valid_url(link):
             continue
         results.append((title, link, 'html'))
     return results
 
-# 6) 수집 및 저장
+# 6) 데이터 수집 및 저장
 def scrape_and_save(day):
     ensure_header()
     rows = []
@@ -150,18 +155,19 @@ def scrape_and_save(day):
         except Exception as e:
             logging.error(f"시트 저장 에러: {e}")
 
-# 7) 스케줄러 등록 & 실행
+# 7) 스케줄러 시작 및 실행
 def job():
     wd = time.localtime().tm_wday
-    mapping = {0: '월요일', 1: '화요일', 2: '수요일', 3: '목요일', 4: '금요일'}
+    mapping = {0:'월요일',1:'화요일',2:'수요일',3:'목요일',4:'금요일'}
     if wd in mapping:
         scrape_and_save(mapping[wd])
 
-# 한국 시각 오전 9시에 실행되도록 설정 (24시간 형식)
+# KST 오전 9시 실행 → UTC 00:00
 schedule.every().day.at("00:00").do(job)
 
 if __name__ == "__main__":
     logging.info("스케줄러 시작")
+    # 한 번만 실행 모드
     if os.getenv("GITHUB_ACTIONS"):
         job()
     else:
